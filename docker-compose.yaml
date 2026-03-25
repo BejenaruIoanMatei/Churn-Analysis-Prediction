@@ -25,12 +25,15 @@ services:
       - 8000:8080
     environment:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@postgres:5432/${AIRFLOW_DB_NAME}
+      AIRFLOW__CORE__HOSTNAME_CALLABLE: 'airflow.utils.net.get_host_ip_address'
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./scripts:/opt/airflow/scripts
+      - ./secrets/kaggle.json:/home/airflow/.kaggle/kaggle.json
+      - ./data:/opt/airflow/data
       - /var/run/docker.sock:/var/run/docker.sock
     group_add:
       - '1001'
@@ -40,7 +43,7 @@ services:
     networks:
       - my-network
     command: >
-      bash -c "airflow db migrate && airflow standalone"
+        bash -c "pip install -r /opt/airflow/scripts/requirements.txt && airflow db migrate && airflow standalone"
   
 networks:
   my-network:

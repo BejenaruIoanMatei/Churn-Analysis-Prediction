@@ -2,3 +2,7 @@
 .venv
 
 postgres/
+
+/secrets
+
+data/*
