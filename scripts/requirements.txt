@@ -2,3 +2,4 @@ kaggle
 pandas
 sqlalchemy
 psycopg2-binary
+scikit-learn
