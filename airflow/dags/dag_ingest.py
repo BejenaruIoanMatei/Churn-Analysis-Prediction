@@ -28,10 +28,7 @@ def download_dataset():
 
 def ingest_to_postgres():
     df = pd.read_csv(CSV_FILE)
-    
-    df.columns = [c.lower().replace(" ", "_") for c in df.columns]
-    df["totalcharges"] = pd.to_numeric(df["totalcharges"], errors="coerce")
-    
+        
     engine = create_engine(PG_CONN)
     df.to_sql(
         name="raw_churn",

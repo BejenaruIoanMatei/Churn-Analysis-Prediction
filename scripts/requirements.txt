@@ -3,3 +3,11 @@ pandas
 sqlalchemy
 psycopg2-binary
 scikit-learn
+pandas
+numpy
+joblib
+xgboost
+shap
+scikit-learn
+psycopg2-binary
+sqlalchemy
