@@ -69,6 +69,7 @@ def train_and_analyze():
         df_encoded["Churn"] = df_encoded["Churn"].map({"Yes": 1, "No": 0})
 
         X = df_encoded.drop(["Churn", "customerID"], axis=1)
+        X.columns = [col.replace('[', '').replace(']', '').replace('<', '') for col in X.columns]
         y = df_encoded["Churn"]
 
     except KeyError as e:
@@ -109,37 +110,21 @@ def train_and_analyze():
     }
 
     try:
-        explainer = shap.TreeExplainer(xgb)
-        shap_values = explainer.shap_values(X_test)
+        importance_df = pd.DataFrame({
+            "feature": X_train.columns,
+            "importance": xgb.feature_importances_
+        })
 
-        if isinstance(shap_values, list):
-            shap_array = shap_values[1] if len(shap_values) > 1 else shap_values[0]
-        else:
-            shap_array = shap_values
-
-        vals = np.abs(shap_array).mean(axis=0)
-
-        importance_df = pd.DataFrame(
-            {
-                "feature": X_test.columns,
-                "importance": vals
-            }
-        )
-
-        top_features = importance_df.sort_values(
-            by="importance",
-            ascending=False
-        ).head(5)
-
+        top_features = importance_df.sort_values(by="importance", ascending=False).head(5)
         metrics["top_features"] = json.dumps(
-            top_features.set_index("feature")["importance"].to_dict()
+            top_features.set_index("feature")["importance"].apply(float).to_dict()
         )
 
-        print("SHAP finished successfully")
+        print("Feature importance finished successfully")
 
     except Exception as e:
-        print(f"Error SHAP (ignored, pipeline continues): {e}")
-        metrics["top_features"] = None
+        print(f"Error feature importance: {e}")
+        metrics["top_features"] = json.dumps({"error": str(e)})
 
     df_metrics = pd.DataFrame([metrics])
 
@@ -150,4 +135,4 @@ def train_and_analyze():
         index=False
     )
 
-    print("Metrics and SHAP analysis have been saved in 'model_metrics'")
+    print("Metrics have been saved in 'model_metrics'")
