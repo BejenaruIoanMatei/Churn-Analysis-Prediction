@@ -47,6 +47,8 @@ cd Churn-Analysis-Prediction
 # Set environment variables
 cp .env.example .env
 
+chmod -R 777 ./models ./scripts ./dags
+
 # Start all services
 docker compose up -d #--build 
 

@@ -1,4 +1,13 @@
 services:
+
+  init-permissions:
+    image: alpine
+    volumes:
+      - ./models:/opt/airflow/models
+      - ./scripts:/opt/airflow/scripts
+      - ./dags:/opt/airflow/dags
+    command: sh -c "chmod -R 777 /opt/airflow/models /opt/airflow/scripts /opt/airflow/dags"
+
   postgres:
     container_name: postgres_container
     image: postgres:14.22
@@ -41,6 +50,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      init-permissions:
+        condition: service_completed_successfully
     networks:
       - my-network
     command: >

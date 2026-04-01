@@ -2,7 +2,6 @@ from datetime import datetime
 import pandas as pd
 import joblib
 from xgboost import XGBClassifier
-import shap
 import os
 from sqlalchemy import create_engine
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
@@ -85,9 +84,9 @@ def train_and_analyze():
 
     xgb = XGBClassifier(
         random_state=7,
-        n_estimators=1000,
+        n_estimators=3000,
         learning_rate=0.01,
-        max_depth=6,
+        max_depth=8,
         subsample=0.8,
         colsample_bytree=0.8,
         eval_metric='logloss'
