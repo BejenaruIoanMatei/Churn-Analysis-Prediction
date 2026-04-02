@@ -24,8 +24,12 @@ Docker Compose
 │   ├── DAG 1 — Ingest
 │   │   ├── t1: Download dataset from Kaggle API
 │   │   └── t2: Load raw data into PostgreSQL
-│   └── DAG 2 — Train & Analyze
-│       └── t1: Feature Engineering → XGBoost Training → Metrics + Feature Importance → Save to DB
+│   ├── DAG 2 — Train & Analyze
+│   │   └── t1: Feature Engineering → XGBoost Training → Metrics + Feature Importance → Save to DB
+│   └── DAG 3 — Monitor & Retrain        ← MLOps
+│       ├── t1: Check F1 score from model_metrics
+│       ├── t2: Retrain if F1 < threshold (branch)
+│       └── t3: Notify result
 ├── FastAPI                 ← REST API for real-time churn predictions
 │   ├── POST /predict       ← returns churn probability + risk level
 │   └── GET  /              ← health check
@@ -67,6 +71,7 @@ open http://localhost:8001/docs
 1. In the Airflow UI, trigger **`dag_01_ingest_churn`** — downloads and loads data into PostgreSQL
 2. Trigger **`dag_02_train_and_report`** — trains the model and saves metrics
 3. The FastAPI service automatically picks up the new model from the shared `/models` volume
+4. **`dag_03_retrain_monitor`** runs automatically `@weekly` — checks F1 and retrains if needed
 
 IMPORTANT:
 
@@ -86,7 +91,6 @@ IMPORTANT:
 | **Evaluation** | Accuracy, F1, Precision, Recall saved to `model_metrics` table |
 | **Feature Importance** | Top 5 features by gain saved as JSON in `model_metrics` |
 | **Artifacts** | Saves `model_churn.joblib` and `scaler.joblib` to `/models` |
- 
 ---
 
 ## FastAPI — Prediction Endpoint
@@ -171,6 +175,29 @@ churn=false | probability=0.0612
 
 ---
 
+## MLOps — Automated Monitoring & Retraining (DAG 3)
+ 
+`dag_03_retrain_monitor` implements a basic MLOps loop that runs **every week** and checks whether the model is still performing above the acceptable threshold.
+ 
+```
+check_performance
+      │
+      ├── F1 < 0.75 ──→ retrain ──→ notify_result
+      │
+      └── F1 >= 0.75 ─→ skip_retrain ──→ notify_result
+```
+ 
+**Why this matters in production:** When DAG 1 ingests new customer data over time, the model is automatically retrained on the expanded dataset if performance degrades — without any manual intervention. This closes the loop between data ingestion and model freshness.
+ 
+| Component | Role |
+|---|---|
+| `BranchPythonOperator` | Reads latest F1 from `model_metrics` and decides branch |
+| F1 threshold (`0.75`) | Configurable minimum acceptable performance |
+| `@weekly` schedule | Runs automatically every week |
+| XCom | Passes F1 value between tasks for the notify step |
+ 
+---
+
 ## Exploratory Data Analysis
 
 The EDA notebook (`scripts/EDA.ipynb`) covers:
@@ -209,8 +236,10 @@ Populated after each DAG 2 run:
 │   └── dags
 │       ├── __pycache__
 │       │   ├── dag_ingest.cpython-312.pyc
+│       │   ├── dag_retrain.cpython-312.pyc
 │       │   └── dag_train.cpython-312.pyc
 │       ├── dag_ingest.py
+│       ├── dag_retrain.py
 │       └── dag_train.py
 ├── data
 │   └── WA_Fn-UseC_-Telco-Customer-Churn.csv
