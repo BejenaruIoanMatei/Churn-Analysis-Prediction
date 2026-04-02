@@ -5,7 +5,7 @@ services:
     volumes:
       - ./models:/opt/airflow/models
       - ./scripts:/opt/airflow/scripts
-      - ./dags:/opt/airflow/dags
+      - ./airflow/dags:/opt/airflow/dags
     command: sh -c "chmod -R 777 /opt/airflow/models /opt/airflow/scripts /opt/airflow/dags"
 
   postgres:

@@ -64,6 +64,9 @@ def train_and_analyze():
 
         scaler = MinMaxScaler()
         df_encoded[numeric_col] = scaler.fit_transform(df_encoded[numeric_col])
+        
+        joblib.dump(scaler, "/opt/airflow/models/scaler.joblib")
+        print("Scaler saved")
 
         df_encoded["Churn"] = df_encoded["Churn"].map({"Yes": 1, "No": 0})
 
