@@ -5,7 +5,7 @@ services:
     volumes:
       - ./models:/opt/airflow/models
       - ./scripts:/opt/airflow/scripts
-      - ./dags:/opt/airflow/dags
+      - ./airflow/dags:/opt/airflow/dags
     command: sh -c "chmod -R 777 /opt/airflow/models /opt/airflow/scripts /opt/airflow/dags"
 
   postgres:
@@ -56,6 +56,21 @@ services:
       - my-network
     command: >
         bash -c "pip install -r /opt/airflow/scripts/requirements.txt && airflow db migrate && airflow standalone"
+
+  fastapi:
+    container_name: fastapi_container
+    build: ./fastapi
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./models:/models
+      - ./fastapi:/app
+    depends_on:
+      - postgres
+      - af
+    networks:
+      - my-network
+    restart: unless-stopped
   
 networks:
   my-network:
