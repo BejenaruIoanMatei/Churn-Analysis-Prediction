@@ -4,6 +4,8 @@ An end-to-end ML pipeline for predicting customer churn using **XGBoost**, orche
 
 ---
 
+![Project Architecture Diagram (Simplified)](assets/ArchitectureDiagram.png)
+
 ### Key Insights from Top 5 Features
 
 | Feature | Insight |
